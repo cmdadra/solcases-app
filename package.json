@@ -1,0 +1,32 @@
+{
+  "name": "privy-wallet-integration",
+  "version": "1.0.0",
+  "description": "Clean Privy wallet creation integration for Solana",
+  "main": "privy-wallet.js",
+  "scripts": {
+    "start": "node privy-wallet.js",
+    "dev": "nodemon privy-wallet.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "node-fetch": "^2.7.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "solana",
+    "privy",
+    "wallet",
+    "blockchain",
+    "embedded-wallet"
+  ],
+  "author": "Your Project",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

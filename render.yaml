@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: solcases-app
+    env: node
+    buildCommand: npm install
+    startCommand: node privy-wallet.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PRIVY_APP_ID
+        sync: false
+      - key: PRIVY_APP_SECRET
+        sync: false

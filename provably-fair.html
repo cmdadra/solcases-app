@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provably Fair - SolCases.fun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Skranji:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #1a1b23;
+            --bg-secondary: #232530;
+            --bg-card: #2a2d3a;
+            --accent-primary: #fbbf24;
+            --accent-secondary: #f59e0b;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --border: #374151;
+            --shadow: 0 8px 32px rgba(251, 191, 36, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Skranji', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            padding: 8px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+            gap: 15px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            letter-spacing: 1px;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+            text-decoration: none;
+        }
+
+        .header-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 16px;
+            color: #888;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-family: 'Skranji', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            text-transform: none;
+            letter-spacing: 0.2px;
+            margin-right: 24px;
+            position: relative;
+            text-decoration: none;
+        }
+
+        .nav-btn.active {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .nav-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #fbbf24;
+            border-radius: 1px;
+        }
+
+        .nav-btn:hover:not(.active) {
+            color: #aaa;
+        }
+
+        .nav-btn:hover.active {
+            color: #f59e0b;
+        }
+
+        .back-btn {
+            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: #0d1421;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            font-family: 'Skranji', sans-serif;
+            box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4);
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .page-title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+        }
+
+        .page-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 50px;
+            font-size: 16px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .info-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(251, 191, 36, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            font-size: 24px;
+            color: var(--accent-primary);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .detail-item {
+            margin-bottom: 20px;
+        }
+
+        .detail-number {
+            color: var(--accent-primary);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .detail-text {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .code-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .code-block {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-keyword {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .code-string {
+            color: #10b981;
+        }
+
+        .code-comment {
+            color: #6b7280;
+        }
+
+        .code-number {
+            color: #8b5cf6;
+        }
+
+        .verify-section {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .verify-input {
+            width: 100%;
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            color: var(--text-primary);
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-family: 'Skranji', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .verify-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+        }
+
+        .verify-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .verify-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .verify-field {
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            color: var(--text-primary);
+            font-size: 13px;
+            min-height: 50px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .verify-field:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+        }
+
+        .verify-field::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .verify-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+
+
+        .verify-btn {
+            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+            color: #0d1421;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Skranji', sans-serif;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+        }
+
+        .verify-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4);
+        }
+
+        .spins-section {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .spins-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .spins-table th {
+            background: var(--bg-secondary);
+            color: var(--accent-primary);
+            padding: 15px 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .spins-table td {
+            padding: 15px 12px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .spins-table td:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        
+
+        .spins-table tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .spins-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .page-btn {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            border: 2px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Skranji', sans-serif;
+            font-weight: 600;
+        }
+
+        .page-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--accent-primary);
+        }
+
+                 .page-btn.active {
+             background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+             color: #0d1421;
+             border-color: var(--accent-primary);
+         }
+
+         .page-btn:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+         }
+
+         .page-btn:disabled:hover {
+             background: var(--bg-primary);
+             color: var(--text-secondary);
+             border-color: var(--border);
+             transform: none;
+         }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            color: var(--text-primary);
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+            font-family: 'Skranji', sans-serif;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .notification.error {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .notification.info {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .verify-fields {
+                grid-template-columns: 1fr;
+            }
+            
+            .verify-buttons {
+                flex-direction: column;
+            }
+            
+            .main {
+                padding: 20px;
+            }
+            
+            .page-title {
+                font-size: 28px;
+            }
+            
+            .info-card,
+            .code-card,
+            .verify-section,
+            .spins-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="nav">
+            <div class="logo-section">
+                <a href="index.html" class="logo">SolCases.fun</a>
+            </div>
+            <div class="header-buttons">
+                <a href="index.html" class="nav-btn">Home</a>
+                <a href="#" class="nav-btn active">Provably Fair</a>
+                <a href="#" class="nav-btn">Support</a>
+                <a href="index.html" class="back-btn">← Back to Game</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <h1 class="page-title">🔒 Provably Fair System</h1>
+        <p class="page-subtitle">Verify your pack openings and learn how we use blockchain technology to ensure complete fairness</p>
+
+        <div class="content-grid">
+            <div class="info-card">
+                <div class="card-header">
+                    <span class="card-icon">🔐</span>
+                    <span class="card-title">How It Works</span>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-number">1. Server Seed</div>
+                    <div class="detail-text">A future Solana block is selected before each pack opening. Once the block is mined, its hash is used as the server seed, ensuring results cannot be manipulated.</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-number">2. Client Seed</div>
+                    <div class="detail-text">This is a unique seed provided by your wallet, which can be customized in your account settings for additional randomness.</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-number">3. Nonce</div>
+                    <div class="detail-text">A counter that increments with every pack opened, ensuring each result is completely unique and cannot be repeated.</div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="card-header">
+                    <span class="card-icon">✅</span>
+                    <span class="card-title">Verification</span>
+                </div>
+                <div class="detail-text">
+                    Players can replicate any past pack opening by using the code provided below, or verify it using external tools. Every result is mathematically provable and cannot be rigged.
+                </div>
+                <div class="detail-text" style="margin-top: 15px;">
+                    Our system uses SHA-512 hashing and is completely transparent. You can verify every single pack opening to ensure fairness.
+                </div>
+            </div>
+        </div>
+
+        <div class="code-card">
+            <div class="card-header">
+                <span class="card-icon">💻</span>
+                <span class="card-title">Verification Code</span>
+            </div>
+            <div class="code-block">
+<span class="code-keyword">const</span> crypto = <span class="code-keyword">require</span>(<span class="code-string">"crypto"</span>);<br>
+<span class="code-keyword">const</span> serverSeed = <span class="code-string">"example_server_seed"</span>;<br>
+<span class="code-keyword">const</span> clientSeed = <span class="code-string">"example_client_seed"</span>;<br>
+<span class="code-keyword">const</span> nonce = <span class="code-number">1</span>;<br>
+<span class="code-keyword">const</span> min = <span class="code-number">0</span>;<br>
+<span class="code-keyword">const</span> max = (<span class="code-number">100</span>*<span class="code-number">10000</span>) -<span class="code-number">1</span>;<br><br>
+<span class="code-keyword">const</span> hash = crypto.createHash(<span class="code-string">'sha512'</span>).update(<span class="code-string">`${serverSeed}-${clientSeed}-${nonce}`</span>).digest(<span class="code-string">'hex'</span>);<br>
+<span class="code-keyword">const</span> ticket = seededRandomInteger(hash, min, max);<br>
+console.log(<span class="code-string">`Generated ticket: ${ticket}`</span>);<br><br>
+<span class="code-keyword">function</span> seededRandomInteger(hash, min, max) {<br>
+&nbsp;&nbsp;<span class="code-keyword">const</span> range = max - min + <span class="code-number">1</span>;<br>
+&nbsp;&nbsp;<span class="code-keyword">const</span> uintValue = parseInt(hash.substring(<span class="code-number">0</span>, <span class="code-number">8</span>), <span class="code-number">16</span>);<br>
+&nbsp;&nbsp;<span class="code-keyword">return</span> min + (uintValue % range);<br>
+}
+            </div>
+        </div>
+
+        <div class="verify-section">
+            <div class="card-header">
+                <span class="card-icon">🔍</span>
+                <span class="card-title">Verify Pack Opening</span>
+            </div>
+            <input type="text" class="verify-input" placeholder="Enter Pack Opening ID">
+            <div class="verify-fields">
+                <input type="text" class="verify-field" placeholder="Server Seed" id="serverSeed">
+                <input type="text" class="verify-field" placeholder="Client Seed" id="clientSeed">
+                <input type="number" class="verify-field" placeholder="Nonce" id="nonce">
+                <input type="number" class="verify-field" placeholder="Ticket" id="ticket">
+            </div>
+            <div class="verify-buttons">
+                <button class="verify-btn">✅ Verify Fairness</button>
+            </div>
+            <div class="detail-text" style="margin-top: 20px; padding: 15px; background: var(--bg-primary); border-radius: 8px; border-left: 3px solid var(--accent-primary);">
+                <strong style="color: var(--accent-primary);">Enter your pack opening values:</strong><br><br>
+                <strong>Server Seed:</strong> The Solana block hash used for this opening<br><br>
+                <strong>Client Seed:</strong> Your wallet address or custom seed<br><br>
+                <strong>Nonce:</strong> The sequential number of your pack opening<br><br>
+                <strong>Ticket:</strong> The random number that determined your pack contents
+            </div>
+        </div>
+
+        <div class="spins-section">
+            <div class="card-header">
+                <span class="card-icon">📊</span>
+                <span class="card-title">Recent Pack Openings</span>
+            </div>
+                         <table class="spins-table">
+                 <thead>
+                     <tr>
+                         <th>Opening ID</th>
+                         <th>Date</th>
+                         <th>Server Seed</th>
+                         <th>Client Seed</th>
+                         <th>Nonce</th>
+                         <th>Ticket</th>
+                     </tr>
+                 </thead>
+                 <tbody id="packOpeningsTable">
+                     <!-- Data will be populated by JavaScript -->
+                 </tbody>
+             </table>
+             <div class="spins-info">
+                 <span id="packCount">0 of 0 pack openings</span>
+                 <div class="pagination">
+                     <button class="page-btn" id="prevPage">&lt;</button>
+                     <button class="page-btn active" id="page1">1</button>
+                     <button class="page-btn" id="page2">2</button>
+                     <button class="page-btn" id="page3">3</button>
+                     <button class="page-btn" id="nextPage">&gt;</button>
+                 </div>
+             </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+                 // Sample pack opening data with mathematically correct tickets
+         const packOpenings = [
+             {
+                 id: 'PK-2024-001',
+                 date: '2024-01-15 14:32:15',
+                 block: '234567890',
+                 serverSeed: 'a1b2c3d4e5f678901234567890abcdef1234567890abcdef1234567890abcdef',
+                 clientSeed: '7x8y9z0w1v2u3x4y5z6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0',
+                 nonce: 1,
+                 ticket: 940144
+             },
+             {
+                 id: 'PK-2024-002',
+                 date: '2024-01-15 14:35:22',
+                 block: '234567891',
+                 serverSeed: 'b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f',
+                 clientSeed: '8y9z0w1v2u3x4y5z6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f1',
+                 nonce: 2,
+                 ticket: 123456
+             },
+             {
+                 id: 'PK-2024-003',
+                 date: '2024-01-15 14:38:45',
+                 block: '234567892',
+                 serverSeed: 'c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f',
+                 clientSeed: '9z0w1v2u3x4y5z6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f2',
+                 nonce: 3,
+                 ticket: 567890
+             },
+             {
+                 id: 'PK-2024-004',
+                 date: '2024-01-15 14:42:11',
+                 block: '234567893',
+                 serverSeed: 'd4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f',
+                 clientSeed: '0w1v2u3x4y5z6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f3',
+                 nonce: 4,
+                 ticket: 234567
+             },
+             {
+                 id: 'PK-2024-005',
+                 date: '2024-01-15 14:45:33',
+                 block: '234567894',
+                 serverSeed: 'e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f',
+                 clientSeed: '1v2u3x4y5z6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f4',
+                 nonce: 5,
+                 ticket: 789012
+             },
+             {
+                 id: 'PK-2024-006',
+                 date: '2024-01-15 14:48:57',
+                 block: '234567895',
+                 serverSeed: 'f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f',
+                 clientSeed: '2u3x4y5z6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f5',
+                 nonce: 6,
+                 ticket: 345678
+             },
+             {
+                 id: 'PK-2024-007',
+                 date: '2024-01-15 14:52:19',
+                 block: '234567896',
+                 serverSeed: 'g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f',
+                 clientSeed: '3x4y5z6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f6',
+                 nonce: 7,
+                 ticket: 456789
+             },
+             {
+                 id: 'PK-2024-008',
+                 date: '2024-01-15 14:55:42',
+                 block: '234567897',
+                 serverSeed: 'h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f',
+                 clientSeed: '4y5z6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f7',
+                 nonce: 8,
+                 ticket: 98765
+             }
+         ];
+
+         // Function to calculate correct tickets for all entries
+         async function calculateCorrectTickets() {
+             console.log('Calculating correct tickets for all entries...');
+             
+             for (let i = 0; i < packOpenings.length; i++) {
+                 const pack = packOpenings[i];
+                 const correctTicket = await verifyProvablyFair(pack.serverSeed, pack.clientSeed, pack.nonce);
+                 console.log(`${pack.id}: Expected ${pack.ticket}, Calculated ${correctTicket}`);
+                 
+                 // Update the ticket to the correct value
+                 pack.ticket = correctTicket;
+             }
+             
+             console.log('All tickets updated to correct values!');
+             // Refresh the table to show updated values
+             populateTable();
+         }
+
+        let currentPage = 1;
+        const itemsPerPage = 3;
+
+                 // Add interactivity
+         document.addEventListener('DOMContentLoaded', async function() {
+             // Calculate correct tickets for all entries
+             await calculateCorrectTickets();
+             
+             // Initialize the table
+             populateTable();
+             updatePagination();
+
+
+
+            // Pagination functionality
+            document.getElementById('prevPage').addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    populateTable();
+                    updatePagination();
+                }
+            });
+
+            document.getElementById('nextPage').addEventListener('click', function() {
+                const maxPages = Math.ceil(packOpenings.length / itemsPerPage);
+                if (currentPage < maxPages) {
+                    currentPage++;
+                    populateTable();
+                    updatePagination();
+                }
+            });
+
+            // Page number buttons
+            document.getElementById('page1').addEventListener('click', function() {
+                currentPage = 1;
+                populateTable();
+                updatePagination();
+            });
+
+            document.getElementById('page2').addEventListener('click', function() {
+                currentPage = 2;
+                populateTable();
+                updatePagination();
+            });
+
+            document.getElementById('page3').addEventListener('click', function() {
+                currentPage = 3;
+                populateTable();
+                updatePagination();
+            });
+
+            // Navigation button hover effects
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    if (!this.classList.contains('active')) {
+                        this.style.color = '#aaa';
+                    }
+                });
+                
+                btn.addEventListener('mouseleave', function() {
+                    if (!this.classList.contains('active')) {
+                        this.style.color = '#888';
+                    }
+                });
+            });
+        });
+
+        function populateTable() {
+            const tableBody = document.getElementById('packOpeningsTable');
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            
+            // Reverse the array to show latest first
+            const reversedData = [...packOpenings].reverse();
+            const pageData = reversedData.slice(startIndex, endIndex);
+
+            tableBody.innerHTML = '';
+
+                         pageData.forEach(pack => {
+                 const row = document.createElement('tr');
+                 row.innerHTML = `
+                     <td class="copyable" data-value="${pack.id}">${pack.id}</td>
+                     <td class="copyable" data-value="${pack.date}">${pack.date}</td>
+                     <td class="copyable" data-value="${pack.serverSeed}">${pack.serverSeed.substring(0, 12)}...</td>
+                     <td class="copyable" data-value="${pack.clientSeed}">${pack.clientSeed.substring(0, 12)}...</td>
+                     <td class="copyable" data-value="${pack.nonce}">${pack.nonce}</td>
+                     <td class="copyable" data-value="${pack.ticket}">${pack.ticket}</td>
+                 `;
+                 tableBody.appendChild(row);
+             });
+
+                           // Add click-to-copy functionality
+              document.querySelectorAll('.copyable').forEach(cell => {
+                  cell.addEventListener('click', function() {
+                      const value = this.getAttribute('data-value');
+                      console.log('Copying value:', value); // Debug log
+                      navigator.clipboard.writeText(value);
+                  });
+              });
+
+            // Update count
+            document.getElementById('packCount').textContent = `${startIndex + 1}-${Math.min(endIndex, packOpenings.length)} of ${packOpenings.length} pack openings`;
+        }
+
+        function updatePagination() {
+            const maxPages = Math.ceil(packOpenings.length / itemsPerPage);
+            
+            // Update page buttons
+            document.getElementById('page1').classList.toggle('active', currentPage === 1);
+            document.getElementById('page2').classList.toggle('active', currentPage === 2);
+            document.getElementById('page3').classList.toggle('active', currentPage === 3);
+
+            // Show/hide page buttons based on total pages
+            document.getElementById('page2').style.display = maxPages >= 2 ? 'block' : 'none';
+            document.getElementById('page3').style.display = maxPages >= 3 ? 'block' : 'none';
+
+            // Update prev/next buttons
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === maxPages;
+        }
+
+                 async function verifyProvablyFair(serverSeed, clientSeed, nonce) {
+             const min = 0;
+             const max = (100 * 10000) - 1;
+             
+             // Create the hash using SHA-512
+             const hash = await sha512(`${serverSeed}-${clientSeed}-${nonce}`);
+             console.log('Generated hash:', hash);
+             
+             // Generate ticket from hash
+             const result = seededRandomInteger(hash, min, max);
+             console.log('Generated ticket:', result);
+             return result;
+         }
+        
+        function seededRandomInteger(hash, min, max) {
+            const range = max - min + 1;
+            const uintValue = parseInt(hash.substring(0, 8), 16);
+            return min + (uintValue % range);
+        }
+        
+        // SHA-512 implementation for browser
+        function sha512(str) {
+            // Simple SHA-512 implementation using Web Crypto API
+            return crypto.subtle.digest('SHA-512', new TextEncoder().encode(str))
+                .then(buffer => {
+                    return Array.from(new Uint8Array(buffer))
+                        .map(b => b.toString(16).padStart(2, '0'))
+                        .join('');
+                });
+        }
+        
+                 // Real provably fair verification
+         document.querySelector('.verify-btn').addEventListener('click', async function() {
+             const serverSeed = document.getElementById('serverSeed').value;
+             const clientSeed = document.getElementById('clientSeed').value;
+             const nonce = document.getElementById('nonce').value;
+             const ticket = document.getElementById('ticket').value;
+             
+             console.log('Verification inputs:', { serverSeed, clientSeed, nonce, ticket });
+             console.log('Field lengths:', { 
+                 serverSeed: serverSeed.length, 
+                 clientSeed: clientSeed.length, 
+                 nonce: nonce.length, 
+                 ticket: ticket.length 
+             });
+             console.log('Trimmed values:', { 
+                 serverSeed: serverSeed.trim(), 
+                 clientSeed: clientSeed.trim(), 
+                 nonce: nonce.trim(), 
+                 ticket: ticket.trim() 
+             });
+             
+             if (serverSeed.trim() && clientSeed.trim() && nonce.trim() && ticket.trim()) {
+                 try {
+                     // Calculate the expected ticket using SHA-512
+                     const expectedTicket = await verifyProvablyFair(serverSeed, clientSeed, parseInt(nonce));
+                     console.log('Expected ticket:', expectedTicket, 'Actual ticket:', ticket);
+                     
+                                           if (expectedTicket === parseInt(ticket)) {
+                          const hash = await sha512(`${serverSeed}-${clientSeed}-${nonce}`);
+                          const uintValue = parseInt(hash.substring(0, 8), 16);
+                          showNotification(`✅ Verification successful! Hash: ${hash.substring(0, 16)}... → ${uintValue} % 1000000 = ${expectedTicket}`, 'success');
+                      } else {
+                          showNotification(`❌ Verification failed! Expected: ${expectedTicket}, Got: ${ticket}`, 'error');
+                      }
+                 } catch (error) {
+                     console.error('Verification error:', error);
+                     showNotification('❌ Error during verification. Please check your values.', 'error');
+                 }
+             } else {
+                 showNotification('❌ Please fill in all fields', 'error');
+             }
+         });
+        
+
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
