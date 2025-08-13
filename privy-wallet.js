@@ -14,24 +14,17 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-    origin: [
-        'http://localhost:3001', 
-        'http://localhost:3000', 
-        'null', 
-        'file://',
-        'https://solcases.fun',
-        'https://www.solcases.fun'
-    ],
+    origin: ['https://solcases.fun', 'null', 'file://'],
     credentials: true
 }));
 app.use(express.json());
 app.use(express.static('.'));
-app.use('/assets', express.static('assets'));
+app.use('/Downloads', express.static('Downloads'));
 app.use('/images', express.static('images'));
 
 // Add debugging for static file requests
-app.use('/assets', (req, res, next) => {
-    console.log(`📁 Assets request: ${req.url}`);
+app.use('/Downloads', (req, res, next) => {
+    console.log(`📁 Downloads request: ${req.url}`);
     next();
 });
 
@@ -1665,15 +1658,15 @@ app.get('/test-downloads', (req, res) => {
 
 // Serve demo page
 app.get('/', (req, res) => {
-            res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Start server
 server.listen(PORT, () => {
     console.log('🚀 Privy Wallet Service Running!');
-    console.log(`📡 Server: http://localhost:${PORT}`);
-    console.log(`🎯 Health: http://localhost:${PORT}/api/health`);
-    console.log('💬 WebSocket Chat: ws://localhost:${PORT}');
+    console.log(`📡 Server: https://solcases.fun`);
+    console.log(`🎯 Health: https://solcases.fun/api/health`);
+    console.log('💬 WebSocket Chat: wss://solcases.fun');
     console.log('💎 Ready to create Solana wallets with Privy!');
 });
 
