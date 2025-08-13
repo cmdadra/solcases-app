@@ -3892,7 +3892,6 @@
                 try {
                     // Prevent multiple connections
                     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-                        console.log('💬 Already connected to chat');
                         return;
                     }
                     
@@ -3900,16 +3899,20 @@
                     const sessionId = localStorage.getItem('privy-session-id');
                     
                     if (!sessionId) {
-                        console.log('💬 No session ID available, skipping chat connection');
+                        this.addSystemMessage('No session ID available. Chat will work locally.');
                         return;
                     }
                     
-                    // Connect to the server directly since we're opening the HTML file locally
+                    // Try to connect to the server
                     this.ws = new WebSocket(`wss://solcases.fun?sessionId=${sessionId}`);
                     
                     this.ws.onopen = () => {
-                        console.log('💬 Connected to chat server');
                         this.addSystemMessage('Connected to live chat! 🎉');
+                        // Update connection status
+                        const onlineStatus = document.getElementById('chatOnlineCount');
+                        if (onlineStatus) {
+                            onlineStatus.style.color = '#22c55e'; // Green for connected
+                        }
                     };
                     
                     this.ws.onmessage = (event) => {
@@ -3921,17 +3924,17 @@
                                     document.getElementById('chatOnlineCount').textContent = data.count;
                                     break;
                                 case 'chat_history':
-                                    // Clear existing messages and add history
+                                    // Only load history if chat is empty (first connection)
                                     const messagesContainer = document.getElementById('chatMessages');
-                                    messagesContainer.innerHTML = '';
-                                    data.messages.forEach(msg => {
-                                        if (msg.type === 'user') {
-                            
-                                            this.addChatMessage(msg.username, msg.content, false, msg.level || 1);
-                                        } else if (msg.type === 'system') {
-                                            this.addSystemMessage(msg.content);
-                                        }
-                                    });
+                                    if (messagesContainer.children.length <= 1) { // Only system message
+                                        data.messages.forEach(msg => {
+                                            if (msg.type === 'user') {
+                                                this.addChatMessage(msg.username, msg.content, false, msg.level || 1);
+                                            } else if (msg.type === 'system') {
+                                                this.addSystemMessage(msg.content);
+                                            }
+                                        });
+                                    }
                                     break;
                                 case 'user':
                     
@@ -3964,17 +3967,11 @@
                     };
                     
                     this.ws.onclose = () => {
-                        console.log('💬 Disconnected from chat server');
-                        this.addSystemMessage('Disconnected from chat. Reconnecting... 🔄');
-                        // Try to reconnect after 3 seconds
-                        setTimeout(() => {
-                            this.connectToChat();
-                        }, 3000);
+                        this.addSystemMessage('Chat disconnected. Refresh page to reconnect.');
                     };
                     
                     this.ws.onerror = (error) => {
-                        console.error('❌ WebSocket error:', error);
-                        this.addSystemMessage('Chat connection error. Trying to reconnect... 🔄');
+                        this.addSystemMessage('Chat connection error. Will retry... 🔄');
                     };
                     
                 } catch (error) {
@@ -3989,6 +3986,19 @@
                 
                 if (!message) return;
 
+                // Check message length limit (100 characters)
+                if (message.length > 100) {
+                    this.addSystemMessage('⚠️ Message too long! Maximum 100 characters allowed.');
+                    return;
+                }
+
+                // Check cooldown (1 second between messages)
+                const now = Date.now();
+                if (this.lastMessageTime && (now - this.lastMessageTime) < 1000) {
+                    this.addSystemMessage('⚠️ Please wait 1 second between messages.');
+                    return;
+                }
+
                 // Filter the message for offensive content
                 const filteredMessage = this.filterMessage(message);
                 
@@ -3998,6 +4008,9 @@
                     return;
                 }
 
+                // Update last message time
+                this.lastMessageTime = now;
+
                 // Send via WebSocket if connected
                 if (this.ws && this.ws.readyState === WebSocket.OPEN) {
                     this.ws.send(JSON.stringify({
@@ -4006,9 +4019,8 @@
                     }));
                 } else {
                     // Fallback to local message
-                const username = this.username || this.formatAddress(this.currentWallet) || 'Anonymous';
-
-                this.addChatMessage(username, message, true, this.level || 1);
+                    const username = this.username || this.formatAddress(this.currentWallet) || 'Anonymous';
+                    this.addChatMessage(username, message, true, this.level || 1);
                 }
                 
                 input.value = '';
@@ -4040,13 +4052,20 @@
                 const savedUsername = localStorage.getItem('solcases-username');
                 if (savedUsername) {
                     this.username = savedUsername;
-    
                     
                     // Hide the username section if username is already set
                     const usernameSection = document.getElementById('usernameSection');
                     if (usernameSection) {
                         usernameSection.style.display = 'none';
                     }
+                    
+                    // Update username display if it exists
+                    const usernameDisplay = document.getElementById('usernameDisplay');
+                    if (usernameDisplay) {
+                        usernameDisplay.textContent = savedUsername;
+                    }
+                    
+                    console.log('✅ Loaded saved username:', savedUsername);
                 }
             }
 
