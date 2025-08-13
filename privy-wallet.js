@@ -1456,6 +1456,28 @@ const connectedUsers = new Map();
 const chatMessages = [];
 const MAX_MESSAGES = 100;
 
+// Chat filter for offensive words
+function filterChatMessage(content) {
+    const offensiveWords = [
+        'nigga', 'nigger', 'cp', 'child porn', 'kid'
+    ];
+    
+    let filteredContent = content.toLowerCase();
+    
+    for (const word of offensiveWords) {
+        // Create regex pattern to match the word with word boundaries
+        const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+        filteredContent = filteredContent.replace(regex, '***');
+    }
+    
+    // If any words were filtered, return the filtered content
+    if (filteredContent !== content.toLowerCase()) {
+        return filteredContent;
+    }
+    
+    return content; // Return original if no filtering needed
+}
+
 // WebSocket connection handling
 wss.on('connection', (ws, req) => {
     const userId = Math.random().toString(36).substring(2);
@@ -1463,7 +1485,7 @@ wss.on('connection', (ws, req) => {
     // Try to get sessionId from query parameters
     const url = new URL(req.url, `http://${req.headers.host}`);
     const sessionId = url.searchParams.get('sessionId');
-    console.log(`DEBUG: WebSocket connection - received sessionId: ${sessionId}`);
+
     
     let username = `Player${Math.floor(Math.random() * 9999) + 1}`;
     
@@ -1472,7 +1494,7 @@ wss.on('connection', (ws, req) => {
         const sessionData = sessionStore.get(sessionId);
         if (sessionData && sessionData.username) {
             username = sessionData.username;
-            console.log(`💬 Chat: Loading saved username ${username} for session ${sessionId}`);
+
             
             // Send username_loaded message to client
             ws.send(JSON.stringify({
@@ -1501,7 +1523,7 @@ wss.on('connection', (ws, req) => {
         lastActivity: new Date()
     });
     
-    console.log(`💬 Chat: ${username} connected (${connectedUsers.size} online)`);
+
     
     // Send current online count to all users
     broadcastOnlineCount();
@@ -1525,11 +1547,14 @@ wss.on('connection', (ws, req) => {
                 if (user) {
                     user.lastActivity = new Date();
                     
+                    // Filter the message content
+                    const filteredContent = filterChatMessage(message.content);
+                    
                     // Add message to history
                     const chatMessage = {
                         type: 'user',
                         username: user.username,
-                        content: message.content,
+                        content: filteredContent,
                         level: user.level || 1,
                         timestamp: new Date().toISOString()
                     };
@@ -1557,7 +1582,7 @@ wss.on('connection', (ws, req) => {
                             sessionData.username = message.username;
                             sessionStore.set(user.sessionId, sessionData);
                             saveSessions();
-                            console.log(`💾 Saved username ${message.username} to session ${user.sessionId}`);
+
                         } else {
                             console.log(`DEBUG: Session ID ${user.sessionId} not found in session store.`);
                         }
