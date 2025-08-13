@@ -28,7 +28,7 @@ A clean, minimal implementation of Privy's embedded wallet creation for Solana.
 
 5. **Open demo:**
    ```
-   http://localhost:3001
+   https://solcases.fun
    ```
 
 ## 🔧 API Endpoints
