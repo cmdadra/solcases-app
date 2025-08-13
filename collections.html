@@ -517,7 +517,7 @@
                 try {
                     const sessionId = localStorage.getItem('privy-session-id');
                     
-                    const response = await fetch('http://localhost:3001/api/wallet', {
+                    const response = await fetch('https://solcases.fun/api/wallet', {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -556,7 +556,7 @@
                 btn.textContent = 'Connecting...';
 
                 try {
-                    const response = await fetch('http://localhost:3001/api/connect', {
+                    const response = await fetch('https://solcases.fun/api/connect', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -593,7 +593,7 @@
             async loadBalance() {
                 try {
                     const sessionId = localStorage.getItem('privy-session-id');
-                    const response = await fetch('http://localhost:3001/api/balance', {
+                    const response = await fetch('https://solcases.fun/api/balance', {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -647,7 +647,7 @@
             async loadCollections() {
                 try {
                     const sessionId = localStorage.getItem('privy-session-id');
-                    const response = await fetch('http://localhost:3001/api/collections', {
+                    const response = await fetch('https://solcases.fun/api/collections', {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -750,7 +750,7 @@
             async claimReward(rarity) {
                 try {
                     const sessionId = localStorage.getItem('privy-session-id');
-                    const response = await fetch('http://localhost:3001/api/collections/claim', {
+                    const response = await fetch('https://solcases.fun/api/collections/claim', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
