@@ -30,6 +30,13 @@ app.use('/Downloads', (req, res, next) => {
 
 app.use('/images', (req, res, next) => {
     console.log(`🖼️ Images request: ${req.url}`);
+    // Check if file exists
+    const filePath = path.join(__dirname, 'images', req.url);
+    if (fs.existsSync(filePath)) {
+        console.log(`✅ Image found: ${filePath}`);
+    } else {
+        console.log(`❌ Image not found: ${filePath}`);
+    }
     next();
 });
 
@@ -324,6 +331,21 @@ app.use((req, res, next) => {
     
     next();
 });
+
+// SECURITY: Session validation middleware for protected routes
+function validateSession(req, res, next) {
+    const sessionId = req.sessionId;
+    const sessionData = sessionStore.get(sessionId);
+    
+    if (!sessionData || !sessionData.userId) {
+        return res.status(401).json({
+            success: false,
+            message: 'Invalid or expired session'
+        });
+    }
+    
+    next();
+}
 
 // Privy configuration
 const PRIVY_APP_ID = process.env.PRIVY_APP_ID || 'cme3zjfjl019el80by83w6zzb';
@@ -813,10 +835,7 @@ async function fetchWalletBalance(userId) {
 }
 
 // Get balance endpoint
-app.get('/api/balance', async (req, res) => {
-    if (!req.session.userId) {
-        return res.json({ success: false, message: 'Not authenticated' });
-    }
+app.get('/api/balance', validateSession, async (req, res) => {
     
     try {
         // Use session balance as primary source (site balance)
@@ -863,10 +882,7 @@ app.get('/api/balance', async (req, res) => {
 });
 
 // Get level info endpoint
-app.get('/api/level', (req, res) => {
-    if (!req.session.userId) {
-        return res.json({ success: false, message: 'Not authenticated' });
-    }
+app.get('/api/level', validateSession, (req, res) => {
     
     const level = req.session.level || 1;
     const xp = req.session.xp || 0;
@@ -881,10 +897,7 @@ app.get('/api/level', (req, res) => {
 });
 
 // Get collection progress endpoint
-app.get('/api/collections', (req, res) => {
-    if (!req.sessionId) {
-        return res.json({ success: false, message: 'Not authenticated' });
-    }
+app.get('/api/collections', validateSession, (req, res) => {
     
     
     
@@ -908,10 +921,7 @@ app.get('/api/collections', (req, res) => {
 });
 
 // Claim collection reward endpoint
-app.post('/api/collections/claim', (req, res) => {
-    if (!req.sessionId) {
-        return res.json({ success: false, message: 'Not authenticated' });
-    }
+app.post('/api/collections/claim', validateSession, (req, res) => {
     
     const { rarity } = req.body;
     
@@ -968,10 +978,7 @@ app.get('/api/provably-fair/hash', (req, res) => {
 });
 
 // Withdraw endpoint
-app.post('/api/withdraw', (req, res) => {
-    if (!req.session.userId) {
-        return res.json({ success: false, message: 'Not authenticated' });
-    }
+app.post('/api/withdraw', validateSession, (req, res) => {
     
     const { amount, address } = req.body;
     
@@ -1027,10 +1034,7 @@ app.post('/api/withdraw', (req, res) => {
 });
 
 // Deposit endpoint - for manual balance updates
-app.post('/api/deposit', (req, res) => {
-    if (!req.session.userId) {
-        return res.json({ success: false, message: 'Not authenticated' });
-    }
+app.post('/api/deposit', validateSession, (req, res) => {
     
     const { amount } = req.body;
     
@@ -1076,15 +1080,8 @@ app.get('/api/stats', (req, res) => {
 });
 
 // Inventory endpoint
-app.get('/api/inventory', (req, res) => {
-    if (!req.sessionId) {
-        return res.json({ success: false, message: 'Not authenticated' });
-    }
-    
+app.get('/api/inventory', validateSession, (req, res) => {
     const sessionData = sessionStore.get(req.sessionId);
-    if (!sessionData) {
-        return res.json({ success: false, message: 'Session not found' });
-    }
     
     res.json({
         success: true,
@@ -1093,11 +1090,7 @@ app.get('/api/inventory', (req, res) => {
 });
 
 // Save inventory endpoint
-app.post('/api/inventory', (req, res) => {
-    if (!req.sessionId) {
-        return res.json({ success: false, message: 'Not authenticated' });
-    }
-    
+app.post('/api/inventory', validateSession, (req, res) => {
     const { inventory } = req.body;
     
     if (!inventory) {
@@ -1105,9 +1098,6 @@ app.post('/api/inventory', (req, res) => {
     }
     
     const sessionData = sessionStore.get(req.sessionId);
-    if (!sessionData) {
-        return res.json({ success: false, message: 'Session not found' });
-    }
     
     // Update inventory in session
     sessionData.inventory = inventory;
@@ -1486,22 +1476,29 @@ wss.on('connection', (ws, req) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const sessionId = url.searchParams.get('sessionId');
 
+    // SECURITY: Validate session ID exists and is valid
+    if (!sessionId) {
+        ws.close(1008, 'No session ID provided');
+        return;
+    }
+    
+    const sessionData = sessionStore.get(sessionId);
+    if (!sessionData) {
+        ws.close(1008, 'Invalid session ID');
+        return;
+    }
     
     let username = `Player${Math.floor(Math.random() * 9999) + 1}`;
     
     // Check if user has a saved username in sessions
-    if (sessionId) {
-        const sessionData = sessionStore.get(sessionId);
-        if (sessionData && sessionData.username) {
-            username = sessionData.username;
-
-            
-            // Send username_loaded message to client
-            ws.send(JSON.stringify({
-                type: 'username_loaded',
-                username: username
-            }));
-        }
+    if (sessionData.username) {
+        username = sessionData.username;
+        
+        // Send username_loaded message to client
+        ws.send(JSON.stringify({
+            type: 'username_loaded',
+            username: username
+        }));
     }
     
     // Get user's level from session data
@@ -1545,7 +1542,27 @@ wss.on('connection', (ws, req) => {
             if (message.type === 'chat_message') {
                 const user = connectedUsers.get(userId);
                 if (user) {
+                    // Check message length limit (100 characters)
+                    if (!message.content || message.content.length > 100) {
+                        ws.send(JSON.stringify({
+                            type: 'system',
+                            content: '⚠️ Message too long! Maximum 100 characters allowed.'
+                        }));
+                        return;
+                    }
+
+                    // Check cooldown (1 second between messages)
+                    const now = Date.now();
+                    if (user.lastMessageTime && (now - user.lastMessageTime) < 1000) {
+                        ws.send(JSON.stringify({
+                            type: 'system',
+                            content: '⚠️ Please wait 1 second between messages.'
+                        }));
+                        return;
+                    }
+
                     user.lastActivity = new Date();
+                    user.lastMessageTime = now;
                     
                     // Filter the message content
                     const filteredContent = filterChatMessage(message.content);
@@ -1655,6 +1672,27 @@ app.get('/api/health', (req, res) => {
         timestamp: new Date().toISOString(),
         privyAppId: PRIVY_APP_ID,
         hasRealSecret: PRIVY_APP_SECRET !== 'your-privy-app-secret-here'
+    });
+});
+
+// Test images endpoint
+app.get('/api/test-images', (req, res) => {
+    const images = ['starter-pack.png', 'pro-pack.png', 'elite-pack.png', 'obsidian-pack.png'];
+    const results = {};
+    
+    images.forEach(img => {
+        const filePath = path.join(__dirname, 'images', img);
+        results[img] = {
+            exists: fs.existsSync(filePath),
+            path: filePath,
+            size: fs.existsSync(filePath) ? fs.statSync(filePath).size : 0
+        };
+    });
+    
+    res.json({
+        success: true,
+        images: results,
+        imagesDir: path.join(__dirname, 'images')
     });
 });
 
