@@ -4059,13 +4059,17 @@
                         usernameSection.style.display = 'none';
                     }
                     
-                    // Update username display if it exists
-                    const usernameDisplay = document.getElementById('usernameDisplay');
-                    if (usernameDisplay) {
-                        usernameDisplay.textContent = savedUsername;
-                    }
+                    // Show username in chat header or somewhere visible
+                    this.addSystemMessage(`Welcome back, ${savedUsername}! ✨`);
                     
                     console.log('✅ Loaded saved username:', savedUsername);
+                } else {
+                    // Show username section for new users
+                    const usernameSection = document.getElementById('usernameSection');
+                    if (usernameSection) {
+                        usernameSection.style.display = 'block';
+                        this.addSystemMessage('Please set your username to start chatting!');
+                    }
                 }
             }
 
@@ -4288,33 +4292,185 @@
 
 
             getImageUrl(itemName) {
-                // Red variants
-                const redUrls = {
-                    'red-sword': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-sword.png?updatedAt=1754994594720',
-                    'red-trophy': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-trophy.png?updatedAt=1754994594689',
-                    'red-toilerpaper': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-toilerpaper.png?updatedAt=1754994594676',
-                    'red-rocket': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-rocket.png?updatedAt=1754994594662',
-                    'red-riffle': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-riffle.png?updatedAt=1754994593639',
-                    'red-rock': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-rock.png?updatedAt=1754994593399',
-                    'red-mushroom': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-mushroom.png?updatedAt=1754994593382',
-                    'red-pill': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-pill.png?updatedAt=1754994593379',
-                    'red-magnet': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-magnet.png?updatedAt=1754994593357',
-                    'red-flame': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-flame.png?updatedAt=1754994592241',
-                    'red-gem': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-gem.png?updatedAt=1754994592033',
-                    'red-lightbulb': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-lightbulb.png?updatedAt=1754994591998',
-                    'red-key': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-key.png?updatedAt=1754994591965',
-                    'red-fish': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-fish.png?updatedAt=1754994591933',
-                    'red-cup': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-cup.png?updatedAt=1754994591186',
-                    'red-cookie': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-cookie.png?updatedAt=1754994590978',
-                    'red-dragon': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-dragon.png?updatedAt=1754994590931',
+                // All item URLs - colors are random, no special meaning
+                const allUrls = {
+                    // Red variants
                     'red-cube': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-cube.png?updatedAt=1754994590917',
-                    'red-controller': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-controller.png?updatedAt=1754994590894',
-                    'red-chip': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-chip.png?updatedAt=1754994589960',
+                    'red-dice': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-dice.png?updatedAt=1754994590917',
+                    'red-banana': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-banana.png?updatedAt=1754994589845',
+                    'red-fish': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-fish.png?updatedAt=1754994591933',
+                    'red-rock': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-rock.png?updatedAt=1754994593399',
+                    'red-cup': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-cup.png?updatedAt=1754994591186',
+                    'red-leaf': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-leaf.png?updatedAt=1754994590917',
                     'red-cloud': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-cloud.png?updatedAt=1754994589939',
-                    'red-burger': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-burger.png?updatedAt=1754994589875',
+                    'red-mushroom': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-mushroom.png?updatedAt=1754994593382',
+                    'red-toiletpaper': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-toilerpaper.png?updatedAt=1754994594676',
+                    
+                    // Blue variants
+                    'blue-cube': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-cube.png?updatedAt=1754994572417',
+                    'blue-dice': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-dice.png?updatedAt=1754994572417',
+                    'blue-banana': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-banana.png?updatedAt=1754994572439',
+                    'blue-fish': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-fish.png?updatedAt=1754994575171',
+                    'blue-rock': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-rock.png?updatedAt=1754994575512',
+                    'blue-cup': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-cup.png?updatedAt=1754994572376',
+                    'blue-leaf': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-leaf.png?updatedAt=1754994572417',
+                    'blue-cloud': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-cloud.png?updatedAt=1754994572422',
+                    'blue-mushroom': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-mushroom.png?updatedAt=1754994575224',
+                    'blue-toiletpaper': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-toilerpaper.png?updatedAt=1754994577116',
+                    
+                    // Green variants
+                    'green-cube': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-cube.png?updatedAt=1754994579208',
+                    'green-dice': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-dice.png?updatedAt=1754994579208',
+                    'green-banana': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-banana.png?updatedAt=1754994577987',
+                    'green-fish': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-fish.png?updatedAt=1754994580517',
+                    'green-rock': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-rock.png?updatedAt=1754994582359',
+                    'green-cup': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-cup.png?updatedAt=1754994579175',
+                    'green-leaf': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-leaf.png?updatedAt=1754994579208',
+                    'green-cloud': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-cloud.png?updatedAt=1754994579189',
+                    'green-mushroom': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-mushroom.png?updatedAt=1754994581971',
+                    'green-toiletpaper': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-toiletpaper.png?updatedAt=1754994583197',
+                    
+                    // Yellow variants
+                    'yellow-cube': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-cube.png?updatedAt=1754994597168',
+                    'yellow-dice': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-dice.png?updatedAt=1754994597168',
+                    'yellow-banana': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-banana.png?updatedAt=1754994595991',
+                    'yellow-fish': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-fish.png?updatedAt=1754994598168',
+                    'yellow-rock': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-rock.png?updatedAt=1754994599285',
+                    'yellow-cup': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-cup.png?updatedAt=1754994597170',
+                    'yellow-leaf': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-leaf.png?updatedAt=1754994597168',
+                    'yellow-cloud': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-cloud.png?updatedAt=1754994596065',
+                    'yellow-mushroom': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-mushroom.png?updatedAt=1754994599243',
+                    'yellow-toiletpaper': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-toilerpaper.png?updatedAt=1754994600467',
+                    
+                    // Pink variants
+                    'pink-cube': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-cube.png?updatedAt=1754994585656',
+                    'pink-dice': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-dice.png?updatedAt=1754994585656',
+                    'pink-banana': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-banana.png?updatedAt=1754994584395',
+                    'pink-fish': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-fish.png?updatedAt=1754994586682',
+                    'pink-rock': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-rock.png?updatedAt=1754994587813',
+                    'pink-cup': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-cup.png?updatedAt=1754994585623',
+                    'pink-leaf': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-leaf.png?updatedAt=1754994585656',
+                    'pink-cloud': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-cloud.png?updatedAt=1754994584526',
+                    'pink-mushroom': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-mushroom.png?updatedAt=1754994587798',
+                    'pink-toiletpaper': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-toiletpaper.png?updatedAt=1754994588976',
+                    
+                    // Uncommon items
                     'red-bolt': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-bolt.png?updatedAt=1754994589865',
-                    'red-banana': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-banana.png?updatedAt=1754994589845'
+                    'blue-bolt': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-bolt.png?updatedAt=1754994572409',
+                    'green-bolt': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-bolt.png?updatedAt=1754994578289',
+                    'yellow-bolt': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-bolt.png?updatedAt=1754994595972',
+                    'pink-bolt': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-bolt.png?updatedAt=1754994584446',
+                    
+                    'red-chip': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-chip.png?updatedAt=1754994589960',
+                    'blue-chip': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-chip.png?updatedAt=1754994572419',
+                    'green-chip': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-chip.png?updatedAt=1754994578118',
+                    'yellow-chip': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-chip.png?updatedAt=1754994596045',
+                    'pink-chip': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-chip.png?updatedAt=1754994584493',
+                    
+                    'red-lightbulb': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-lightbulb.png?updatedAt=1754994591998',
+                    'blue-lightbulb': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-lightbulb.png?updatedAt=1754994575241',
+                    'green-lightbulb': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-lightbulb.png?updatedAt=1754994580703',
+                    'yellow-lightbulb': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-lightbulb.png?updatedAt=1754994598225',
+                    'pink-lightbulb': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-lightbulb.png?updatedAt=1754994586751',
+                    
+                    'red-key': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-key.png?updatedAt=1754994591965',
+                    'blue-key': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-key.png?updatedAt=1754994575209',
+                    'green-key': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-key.png?updatedAt=1754994580665',
+                    'yellow-key': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-key.png?updatedAt=1754994598259',
+                    'pink-key': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-key.png?updatedAt=1754994586744',
+                    
+                    'red-star': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-star.png?updatedAt=1754994590917',
+                    'blue-star': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-star.png?updatedAt=1754994577181',
+                    'green-star': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-star.png?updatedAt=1754994583142',
+                    'yellow-star': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-star.png?updatedAt=1754994600647',
+                    'pink-star': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-star.png?updatedAt=1754994588930',
+                    
+                    'red-magnet': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-magnet.png?updatedAt=1754994593357',
+                    'blue-magnet': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue0magnet.png?updatedAt=1754994577443',
+                    'green-magnet': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-magnet.png?updatedAt=1754994581911',
+                    'yellow-magnet': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-magnet.png?updatedAt=1754994599235',
+                    'pink-magnet': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-magnet.png?updatedAt=1754994587712',
+                    
+                    // Rare items
+                    'red-sword': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-sword.png?updatedAt=1754994594720',
+                    'blue-sword': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-sword.png?updatedAt=1754994577176',
+                    'green-sword': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-sword.png?updatedAt=1754994583194',
+                    'yellow-sword': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-sword.png?updatedAt=1754994600358',
+                    'pink-sword': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-sword.png?updatedAt=1754994589109',
+                    
+                    'red-controller': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-controller.png?updatedAt=1754994590894',
+                    'blue-controller': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-%20controller.png?updatedAt=1754994572480',
+                    'green-controller': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-controller.png?updatedAt=1754994579167',
+                    'yellow-controller': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-controller.png?updatedAt=1754994597131',
+                    'pink-controller': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-controller.png?updatedAt=1754994585610',
+                    
+                    'red-cookie': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-cookie.png?updatedAt=1754994590978',
+                    'blue-cookie': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-cookie.png?updatedAt=1754994572441',
+                    'green-cookie': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green%20cookie.png?updatedAt=1754994577975',
+                    'yellow-cookie': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-cookie.png?updatedAt=1754994597151',
+                    'pink-cookie': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-cookie.png?updatedAt=1754994585606',
+                    
+                    'red-pill': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-pill.png?updatedAt=1754994593379',
+                    'blue-pill': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-pill.png?updatedAt=1754994575241',
+                    'green-pill': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-pill.png?updatedAt=1754994581970',
+                    'yellow-pill': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-pill.png?updatedAt=1754994599264',
+                    'pink-pill': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-pill.png?updatedAt=1754994587860',
+                    
+                    // Epic items
+                    'red-burger': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-burger.png?updatedAt=1754994589875',
+                    'blue-burger': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-burger.png?updatedAt=1754994572423',
+                    'green-burger': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-burger.png?updatedAt=1754994578253',
+                    'yellow-burger': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-burger.png?updatedAt=1754994596020',
+                    'pink-burger': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-burger.png?updatedAt=1754994584402',
+                    
+                    'red-flame': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-flame.png?updatedAt=1754994592241',
+                    'blue-flame': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-flame.png?updatedAt=1754994575229',
+                    'green-flame': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-flame.png?updatedAt=1754994580674',
+                    'yellow-flame': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-flame.png?updatedAt=1754994598235',
+                    'pink-flame': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-flame.png?updatedAt=1754994586764',
+                    
+                    'red-rifle': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-riffle.png?updatedAt=1754994593639',
+                    'blue-rifle': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-riffle.png?updatedAt=1754994575459',
+                    'green-rifle': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-riffle.png?updatedAt=1754994581978',
+                    'yellow-rifle': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-riffle.png?updatedAt=1754994599329',
+                    'pink-rifle': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-riffle.png?updatedAt=1754994587842',
+                    
+                    // Legendary items
+                    'red-dragon': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-dragon.png?updatedAt=1754994590931',
+                    'blue-dragon': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-dragon.png?updatedAt=1754994572438',
+                    'green-dragon': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-dragon.png?updatedAt=1754994579235',
+                    'yellow-dragon': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-dragon.png?updatedAt=1754994597148',
+                    'pink-dragon': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-dragon.png?updatedAt=1754994585669',
+                    
+                    'red-rocket': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-rocket.png?updatedAt=1754994594662',
+                    'blue-rocket': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-rocket.png?updatedAt=1754994575521',
+                    'green-rocket': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-rocket.png?updatedAt=1754994583160',
+                    'yellow-rocket': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-rocket.png?updatedAt=1754994600333',
+                    'pink-rocket': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-rocket.png?updatedAt=1754994589070',
+                    
+                    // Mythic items
+                    'red-trophy': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-trophy.png?updatedAt=1754994594689',
+                    'blue-trophy': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-trophy.png?updatedAt=1754994577125',
+                    'green-trophy': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-trophy.png?updatedAt=1754994583571',
+                    'yellow-trophy': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-trophy.png?updatedAt=1754994600737',
+                    'pink-trophy': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-trophy.png?updatedAt=1754994589286',
+                    
+                    'red-gem': 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-gem.png?updatedAt=1754994592033',
+                    'blue-gem': 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-gem.png?updatedAt=1754994575200',
+                    'green-gem': 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-gem.png?updatedAt=1754994580666',
+                    'yellow-gem': 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-gem.png?updatedAt=1754994598191',
+                    'pink-gem': 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-gem.png?updatedAt=1754994586790',
+                    
+                    // Divine items (no color variants)
+                    'solana-throne': 'https://ik.imagekit.io/8rb7srzl8/Downloads/solana-throne.png?updatedAt=1754994590917',
+                    'solana-crown': 'https://ik.imagekit.io/8rb7srzl8/Downloads/solana-crown.png?updatedAt=1754994572417',
+                    'solana-blade': 'https://ik.imagekit.io/8rb7srzl8/Downloads/solana-blade.png?updatedAt=1754994579208',
+                    'solana-orb': 'https://ik.imagekit.io/8rb7srzl8/Downloads/solana-orb.png?updatedAt=1754994597168',
+                    'solana-relic': 'https://ik.imagekit.io/8rb7srzl8/Downloads/solana-relic.png?updatedAt=1754994585656'
                 };
+                
+                return allUrls[itemName] || null;
+            }
 
                 // Yellow variants
                 const yellowUrls = {
