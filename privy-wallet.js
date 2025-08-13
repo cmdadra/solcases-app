@@ -36,6 +36,9 @@ app.use('/images', (req, res, next) => {
         console.log(`✅ Image found: ${filePath}`);
     } else {
         console.log(`❌ Image not found: ${filePath}`);
+        // Try to serve a fallback or return 404 with more info
+        console.log(`🔍 Looking for: ${filePath}`);
+        console.log(`📁 Images directory contents:`, fs.readdirSync(path.join(__dirname, 'images')));
     }
     next();
 });
@@ -834,8 +837,17 @@ async function fetchWalletBalance(userId) {
     }
 }
 
-// Get balance endpoint
-app.get('/api/balance', validateSession, async (req, res) => {
+// Get balance endpoint - allow new users without userId
+app.get('/api/balance', async (req, res) => {
+    // For new users without userId, return 0 balance
+    if (!req.session.userId) {
+        return res.json({
+            success: true,
+            balance: 0,
+            walletAddress: null,
+            source: 'new_user'
+        });
+    }
     
     try {
         // Use session balance as primary source (site balance)
@@ -881,8 +893,17 @@ app.get('/api/balance', validateSession, async (req, res) => {
     }
 });
 
-// Get level info endpoint
-app.get('/api/level', validateSession, (req, res) => {
+// Get level info endpoint - allow new users
+app.get('/api/level', (req, res) => {
+    // For new users without userId, return default level
+    if (!req.session.userId) {
+        return res.json({
+            success: true,
+            level: 1,
+            xp: 0,
+            xpForNextLevel: 100
+        });
+    }
     
     const level = req.session.level || 1;
     const xp = req.session.xp || 0;
@@ -896,8 +917,17 @@ app.get('/api/level', validateSession, (req, res) => {
     });
 });
 
-// Get collection progress endpoint
-app.get('/api/collections', validateSession, (req, res) => {
+// Get collection progress endpoint - allow new users
+app.get('/api/collections', (req, res) => {
+    // For new users without userId, return empty collections
+    if (!req.session.userId) {
+        return res.json({
+            success: true,
+            progress: {},
+            completedCollections: [],
+            availableRewards: []
+        });
+    }
     
     
     
@@ -1079,8 +1109,16 @@ app.get('/api/stats', (req, res) => {
     });
 });
 
-// Inventory endpoint
-app.get('/api/inventory', validateSession, (req, res) => {
+// Inventory endpoint - allow new users
+app.get('/api/inventory', (req, res) => {
+    // For new users without userId, return empty inventory
+    if (!req.session.userId) {
+        return res.json({
+            success: true,
+            inventory: {}
+        });
+    }
+    
     const sessionData = sessionStore.get(req.sessionId);
     
     res.json({
@@ -1282,158 +1320,158 @@ function calculateCasePayout(betAmount, caseType, serverSeed, clientSeed) {
 function generateItem(rarity) {
     const items = {
         common: [
-            { name: 'red-cube', icon: '🔴', color: 'red' },
-            { name: 'blue-cube', icon: '🔵', color: 'blue' },
-            { name: 'green-cube', icon: '🟢', color: 'green' },
-            { name: 'yellow-cube', icon: '🟡', color: 'yellow' },
-            { name: 'pink-cube', icon: '🩷', color: 'pink' },
-            { name: 'red-dice', icon: '🎲', color: 'red' },
-            { name: 'blue-dice', icon: '🎲', color: 'blue' },
-            { name: 'green-dice', icon: '🎲', color: 'green' },
-            { name: 'yellow-dice', icon: '🎲', color: 'yellow' },
-            { name: 'pink-dice', icon: '🎲', color: 'pink' },
-            { name: 'red-banana', icon: '🍌', color: 'red' },
-            { name: 'blue-banana', icon: '🍌', color: 'blue' },
-            { name: 'green-banana', icon: '🍌', color: 'green' },
-            { name: 'yellow-banana', icon: '🍌', color: 'yellow' },
-            { name: 'pink-banana', icon: '🍌', color: 'pink' },
-            { name: 'red-fish', icon: '🐟', color: 'red' },
-            { name: 'blue-fish', icon: '🐟', color: 'blue' },
-            { name: 'green-fish', icon: '🐟', color: 'green' },
-            { name: 'yellow-fish', icon: '🐟', color: 'yellow' },
-            { name: 'pink-fish', icon: '🐟', color: 'pink' },
-            { name: 'red-rock', icon: '🪨', color: 'red' },
-            { name: 'blue-rock', icon: '🪨', color: 'blue' },
-            { name: 'green-rock', icon: '🪨', color: 'green' },
-            { name: 'yellow-rock', icon: '🪨', color: 'yellow' },
-            { name: 'pink-rock', icon: '🪨', color: 'pink' },
-            { name: 'red-cup', icon: '🥤', color: 'red' },
-            { name: 'blue-cup', icon: '🥤', color: 'blue' },
-            { name: 'green-cup', icon: '🥤', color: 'green' },
-            { name: 'yellow-cup', icon: '🥤', color: 'yellow' },
-            { name: 'pink-cup', icon: '🥤', color: 'pink' },
-            { name: 'red-leaf', icon: '🍃', color: 'red' },
-            { name: 'blue-leaf', icon: '🍃', color: 'blue' },
-            { name: 'green-leaf', icon: '🍃', color: 'green' },
-            { name: 'yellow-leaf', icon: '🍃', color: 'yellow' },
-            { name: 'pink-leaf', icon: '🍃', color: 'pink' },
-            { name: 'red-cloud', icon: '☁️', color: 'red' },
-            { name: 'blue-cloud', icon: '☁️', color: 'blue' },
-            { name: 'green-cloud', icon: '☁️', color: 'green' },
-            { name: 'yellow-cloud', icon: '☁️', color: 'yellow' },
-            { name: 'pink-cloud', icon: '☁️', color: 'pink' },
-            { name: 'red-mushroom', icon: '🍄', color: 'red' },
-            { name: 'blue-mushroom', icon: '🍄', color: 'blue' },
-            { name: 'green-mushroom', icon: '🍄', color: 'green' },
-            { name: 'yellow-mushroom', icon: '🍄', color: 'yellow' },
-            { name: 'pink-mushroom', icon: '🍄', color: 'pink' },
-            { name: 'red-toilerpaper', icon: '🧻', color: 'red' },
-            { name: 'blue-toilerpaper', icon: '🧻', color: 'blue' },
-            { name: 'green-toiletpaper', icon: '🧻', color: 'green' },
-            { name: 'yellow-toilerpaper', icon: '🧻', color: 'yellow' },
-            { name: 'pink-toilerpaper', icon: '🧻', color: 'pink' }
+            { name: 'red-cube', icon: '🔴', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-cube.png?updatedAt=1754994590917' },
+            { name: 'blue-cube', icon: '🔵', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-cube.png?updatedAt=1754994572417' },
+            { name: 'green-cube', icon: '🟢', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-cube.png?updatedAt=1754994579208' },
+            { name: 'yellow-cube', icon: '🟡', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-cube.png?updatedAt=1754994597168' },
+            { name: 'pink-cube', icon: '🩷', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-cube.png?updatedAt=1754994585656' },
+            { name: 'red-dice', icon: '🎲', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-dice.png?updatedAt=1754994590917' },
+            { name: 'blue-dice', icon: '🎲', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-dice.png?updatedAt=1754994572417' },
+            { name: 'green-dice', icon: '🎲', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-dice.png?updatedAt=1754994579208' },
+            { name: 'yellow-dice', icon: '🎲', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-dice.png?updatedAt=1754994597168' },
+            { name: 'pink-dice', icon: '🎲', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-dice.png?updatedAt=1754994585656' },
+            { name: 'red-banana', icon: '🍌', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-banana.png?updatedAt=1754994589845' },
+            { name: 'blue-banana', icon: '🍌', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-banana.png?updatedAt=1754994572439' },
+            { name: 'green-banana', icon: '🍌', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-banana.png?updatedAt=1754994577987' },
+            { name: 'yellow-banana', icon: '🍌', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-banana.png?updatedAt=1754994595991' },
+            { name: 'pink-banana', icon: '🍌', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-banana.png?updatedAt=1754994584395' },
+            { name: 'red-fish', icon: '🐟', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-fish.png?updatedAt=1754994591933' },
+            { name: 'blue-fish', icon: '🐟', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-fish.png?updatedAt=1754994575171' },
+            { name: 'green-fish', icon: '🐟', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-fish.png?updatedAt=1754994580517' },
+            { name: 'yellow-fish', icon: '🐟', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-fish.png?updatedAt=1754994598168' },
+            { name: 'pink-fish', icon: '🐟', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-fish.png?updatedAt=1754994586682' },
+            { name: 'red-rock', icon: '🪨', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-rock.png?updatedAt=1754994593399' },
+            { name: 'blue-rock', icon: '🪨', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-rock.png?updatedAt=1754994575512' },
+            { name: 'green-rock', icon: '🪨', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-rock.png?updatedAt=1754994582359' },
+            { name: 'yellow-rock', icon: '🪨', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-rock.png?updatedAt=1754994599285' },
+            { name: 'pink-rock', icon: '🪨', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-rock.png?updatedAt=1754994587813' },
+            { name: 'red-cup', icon: '🥤', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-cup.png?updatedAt=1754994591186' },
+            { name: 'blue-cup', icon: '🥤', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-cup.png?updatedAt=1754994572376' },
+            { name: 'green-cup', icon: '🥤', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-cup.png?updatedAt=1754994579175' },
+            { name: 'yellow-cup', icon: '🥤', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-cup.png?updatedAt=1754994597170' },
+            { name: 'pink-cup', icon: '🥤', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-cup.png?updatedAt=1754994585623' },
+            { name: 'red-leaf', icon: '🍃', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-leaf.png?updatedAt=1754994590917' },
+            { name: 'blue-leaf', icon: '🍃', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-leaf.png?updatedAt=1754994572417' },
+            { name: 'green-leaf', icon: '🍃', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-leaf.png?updatedAt=1754994579208' },
+            { name: 'yellow-leaf', icon: '🍃', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-leaf.png?updatedAt=1754994597168' },
+            { name: 'pink-leaf', icon: '🍃', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-leaf.png?updatedAt=1754994585656' },
+            { name: 'red-cloud', icon: '☁️', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-cloud.png?updatedAt=1754994589939' },
+            { name: 'blue-cloud', icon: '☁️', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-cloud.png?updatedAt=1754994572422' },
+            { name: 'green-cloud', icon: '☁️', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-cloud.png?updatedAt=1754994579189' },
+            { name: 'yellow-cloud', icon: '☁️', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-cloud.png?updatedAt=1754994596065' },
+            { name: 'pink-cloud', icon: '☁️', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-cloud.png?updatedAt=1754994584526' },
+            { name: 'red-mushroom', icon: '🍄', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-mushroom.png?updatedAt=1754994593382' },
+            { name: 'blue-mushroom', icon: '🍄', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-mushroom.png?updatedAt=1754994575224' },
+            { name: 'green-mushroom', icon: '🍄', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-mushroom.png?updatedAt=1754994581971' },
+            { name: 'yellow-mushroom', icon: '🍄', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-mushroom.png?updatedAt=1754994599243' },
+            { name: 'pink-mushroom', icon: '🍄', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-mushroom.png?updatedAt=1754994587798' },
+            { name: 'red-toiletpaper', icon: '🧻', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-toilerpaper.png?updatedAt=1754994594676' },
+            { name: 'blue-toiletpaper', icon: '🧻', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-toilerpaper.png?updatedAt=1754994577116' },
+            { name: 'green-toiletpaper', icon: '🧻', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-toiletpaper.png?updatedAt=1754994583197' },
+            { name: 'yellow-toiletpaper', icon: '🧻', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-toilerpaper.png?updatedAt=1754994600467' },
+            { name: 'pink-toiletpaper', icon: '🧻', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-toiletpaper.png?updatedAt=1754994588976' }
         ],
         uncommon: [
-            { name: 'red-bolt', icon: '⚡', color: 'red' },
-            { name: 'blue-bolt', icon: '⚡', color: 'blue' },
-            { name: 'green-bolt', icon: '⚡', color: 'green' },
-            { name: 'yellow-bolt', icon: '⚡', color: 'yellow' },
-            { name: 'pink-bolt', icon: '⚡', color: 'pink' },
-            { name: 'red-chip', icon: '🎰', color: 'red' },
-            { name: 'blue-chip', icon: '🎰', color: 'blue' },
-            { name: 'green-chip', icon: '🎰', color: 'green' },
-            { name: 'yellow-chip', icon: '🎰', color: 'yellow' },
-            { name: 'pink-chip', icon: '🎰', color: 'pink' },
-            { name: 'red-lightbulb', icon: '💡', color: 'red' },
-            { name: 'blue-lightbulb', icon: '💡', color: 'blue' },
-            { name: 'green-lightbulb', icon: '💡', color: 'green' },
-            { name: 'yellow-lightbulb', icon: '💡', color: 'yellow' },
-            { name: 'pink-lightbulb', icon: '💡', color: 'pink' },
-            { name: 'red-key', icon: '🔑', color: 'red' },
-            { name: 'blue-key', icon: '🔑', color: 'blue' },
-            { name: 'green-key', icon: '🔑', color: 'green' },
-            { name: 'yellow-key', icon: '🔑', color: 'yellow' },
-            { name: 'pink-key', icon: '🔑', color: 'pink' },
-            { name: 'red-star', icon: '⭐', color: 'red' },
-            { name: 'blue-star', icon: '⭐', color: 'blue' },
-            { name: 'green-star', icon: '⭐', color: 'green' },
-            { name: 'yellow-star', icon: '⭐', color: 'yellow' },
-            { name: 'pink-star', icon: '⭐', color: 'pink' },
-            { name: 'red-magnet', icon: '🧲', color: 'red' },
-            { name: 'blue0magnet', icon: '🧲', color: 'blue' },
-            { name: 'green-magnet', icon: '🧲', color: 'green' },
-            { name: 'yellow-magnet', icon: '🧲', color: 'yellow' },
-            { name: 'pink-magnet', icon: '🧲', color: 'pink' }
+            { name: 'red-bolt', icon: '⚡', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-bolt.png?updatedAt=1754994589865' },
+            { name: 'blue-bolt', icon: '⚡', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-bolt.png?updatedAt=1754994572409' },
+            { name: 'green-bolt', icon: '⚡', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-bolt.png?updatedAt=1754994578289' },
+            { name: 'yellow-bolt', icon: '⚡', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-bolt.png?updatedAt=1754994595972' },
+            { name: 'pink-bolt', icon: '⚡', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-bolt.png?updatedAt=1754994584446' },
+            { name: 'red-chip', icon: '🎰', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-chip.png?updatedAt=1754994589960' },
+            { name: 'blue-chip', icon: '🎰', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-chip.png?updatedAt=1754994572419' },
+            { name: 'green-chip', icon: '🎰', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-chip.png?updatedAt=1754994578118' },
+            { name: 'yellow-chip', icon: '🎰', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-chip.png?updatedAt=1754994596045' },
+            { name: 'pink-chip', icon: '🎰', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-chip.png?updatedAt=1754994584493' },
+            { name: 'red-lightbulb', icon: '💡', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-lightbulb.png?updatedAt=1754994591998' },
+            { name: 'blue-lightbulb', icon: '💡', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-lightbulb.png?updatedAt=1754994575241' },
+            { name: 'green-lightbulb', icon: '💡', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-lightbulb.png?updatedAt=1754994580703' },
+            { name: 'yellow-lightbulb', icon: '💡', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-lightbulb.png?updatedAt=1754994598225' },
+            { name: 'pink-lightbulb', icon: '💡', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-lightbulb.png?updatedAt=1754994586751' },
+            { name: 'red-key', icon: '🔑', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-key.png?updatedAt=1754994591965' },
+            { name: 'blue-key', icon: '🔑', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-key.png?updatedAt=1754994575209' },
+            { name: 'green-key', icon: '🔑', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-key.png?updatedAt=1754994580665' },
+            { name: 'yellow-key', icon: '🔑', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-key.png?updatedAt=1754994598259' },
+            { name: 'pink-key', icon: '🔑', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-key.png?updatedAt=1754994586744' },
+            { name: 'red-star', icon: '⭐', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-star.png?updatedAt=1754994590917' },
+            { name: 'blue-star', icon: '⭐', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-star.png?updatedAt=1754994577181' },
+            { name: 'green-star', icon: '⭐', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-star.png?updatedAt=1754994583142' },
+            { name: 'yellow-star', icon: '⭐', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-star.png?updatedAt=1754994600647' },
+            { name: 'pink-star', icon: '⭐', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-star.png?updatedAt=1754994588930' },
+            { name: 'red-magnet', icon: '🧲', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-magnet.png?updatedAt=1754994593357' },
+            { name: 'blue-magnet', icon: '🧲', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue0magnet.png?updatedAt=1754994577443' },
+            { name: 'green-magnet', icon: '🧲', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-magnet.png?updatedAt=1754994581911' },
+            { name: 'yellow-magnet', icon: '🧲', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-magnet.png?updatedAt=1754994599235' },
+            { name: 'pink-magnet', icon: '🧲', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-magnet.png?updatedAt=1754994587712' }
         ],
         rare: [
-            { name: 'red-sword', icon: '⚔️', color: 'red' },
-            { name: 'blue-sword', icon: '⚔️', color: 'blue' },
-            { name: 'green-sword', icon: '⚔️', color: 'green' },
-            { name: 'yellow-sword', icon: '⚔️', color: 'yellow' },
-            { name: 'pink-sword', icon: '⚔️', color: 'pink' },
-            { name: 'red-controller', icon: '🎮', color: 'red' },
-            { name: 'blue- controller', icon: '🎮', color: 'blue' },
-            { name: 'green-controller', icon: '🎮', color: 'green' },
-            { name: 'yellow-controller', icon: '🎮', color: 'yellow' },
-            { name: 'pink-controller', icon: '🎮', color: 'pink' },
-            { name: 'red-cookie', icon: '🍪', color: 'red' },
-            { name: 'blue-cookie', icon: '🍪', color: 'blue' },
-            { name: 'green cookie', icon: '🍪', color: 'green' },
-            { name: 'yellow-cookie', icon: '🍪', color: 'yellow' },
-            { name: 'pink-cookie', icon: '🍪', color: 'pink' },
-            { name: 'red-pill', icon: '💊', color: 'red' },
-            { name: 'blue-pill', icon: '💊', color: 'blue' },
-            { name: 'green-pill', icon: '💊', color: 'green' },
-            { name: 'yellow-pill', icon: '💊', color: 'yellow' },
-            { name: 'pink-pill', icon: '💊', color: 'pink' }
+            { name: 'red-sword', icon: '⚔️', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-sword.png?updatedAt=1754994594720' },
+            { name: 'blue-sword', icon: '⚔️', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-sword.png?updatedAt=1754994577176' },
+            { name: 'green-sword', icon: '⚔️', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-sword.png?updatedAt=1754994583194' },
+            { name: 'yellow-sword', icon: '⚔️', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-sword.png?updatedAt=1754994600358' },
+            { name: 'pink-sword', icon: '⚔️', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-sword.png?updatedAt=1754994589109' },
+            { name: 'red-controller', icon: '🎮', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-controller.png?updatedAt=1754994590894' },
+            { name: 'blue-controller', icon: '🎮', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-%20controller.png?updatedAt=1754994572480' },
+            { name: 'green-controller', icon: '🎮', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-controller.png?updatedAt=1754994579167' },
+            { name: 'yellow-controller', icon: '🎮', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-controller.png?updatedAt=1754994597131' },
+            { name: 'pink-controller', icon: '🎮', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-controller.png?updatedAt=1754994585610' },
+            { name: 'red-cookie', icon: '🍪', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-cookie.png?updatedAt=1754994590978' },
+            { name: 'blue-cookie', icon: '🍪', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-cookie.png?updatedAt=1754994572441' },
+            { name: 'green-cookie', icon: '🍪', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green%20cookie.png?updatedAt=1754994577975' },
+            { name: 'yellow-cookie', icon: '🍪', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-cookie.png?updatedAt=1754994597151' },
+            { name: 'pink-cookie', icon: '🍪', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-cookie.png?updatedAt=1754994585606' },
+            { name: 'red-pill', icon: '💊', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-pill.png?updatedAt=1754994593379' },
+            { name: 'blue-pill', icon: '💊', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-pill.png?updatedAt=1754994575241' },
+            { name: 'green-pill', icon: '💊', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-pill.png?updatedAt=1754994581970' },
+            { name: 'yellow-pill', icon: '💊', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-pill.png?updatedAt=1754994599264' },
+            { name: 'pink-pill', icon: '💊', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-pill.png?updatedAt=1754994587860' }
         ],
         epic: [
-            { name: 'red-burger', icon: '🍔', color: 'red' },
-            { name: 'blue-burger', icon: '🍔', color: 'blue' },
-            { name: 'green-burger', icon: '🍔', color: 'green' },
-            { name: 'yellow-burger', icon: '🍔', color: 'yellow' },
-            { name: 'pink-burger', icon: '🍔', color: 'pink' },
-            { name: 'red-flame', icon: '🔥', color: 'red' },
-            { name: 'blue-flame', icon: '🔥', color: 'blue' },
-            { name: 'green-flame', icon: '🔥', color: 'green' },
-            { name: 'yellow-flame', icon: '🔥', color: 'yellow' },
-            { name: 'pink-flame', icon: '🔥', color: 'pink' },
-            { name: 'red-riffle', icon: '🔫', color: 'red' },
-            { name: 'blue-riffle', icon: '🔫', color: 'blue' },
-            { name: 'green-riffle', icon: '🔫', color: 'green' },
-            { name: 'yellow-riffle', icon: '🔫', color: 'yellow' },
-            { name: 'pink-riffle', icon: '🔫', color: 'pink' }
+            { name: 'red-burger', icon: '🍔', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-burger.png?updatedAt=1754994589875' },
+            { name: 'blue-burger', icon: '🍔', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-burger.png?updatedAt=1754994572423' },
+            { name: 'green-burger', icon: '🍔', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-burger.png?updatedAt=1754994578253' },
+            { name: 'yellow-burger', icon: '🍔', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-burger.png?updatedAt=1754994596020' },
+            { name: 'pink-burger', icon: '🍔', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-burger.png?updatedAt=1754994584402' },
+            { name: 'red-flame', icon: '🔥', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-flame.png?updatedAt=1754994592241' },
+            { name: 'blue-flame', icon: '🔥', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-flame.png?updatedAt=1754994575229' },
+            { name: 'green-flame', icon: '🔥', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-flame.png?updatedAt=1754994580674' },
+            { name: 'yellow-flame', icon: '🔥', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-flame.png?updatedAt=1754994598235' },
+            { name: 'pink-flame', icon: '🔥', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-flame.png?updatedAt=1754994586764' },
+            { name: 'red-rifle', icon: '🔫', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-riffle.png?updatedAt=1754994593639' },
+            { name: 'blue-rifle', icon: '🔫', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-riffle.png?updatedAt=1754994575459' },
+            { name: 'green-rifle', icon: '🔫', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-riffle.png?updatedAt=1754994581978' },
+            { name: 'yellow-rifle', icon: '🔫', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-riffle.png?updatedAt=1754994599329' },
+            { name: 'pink-rifle', icon: '🔫', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-riffle.png?updatedAt=1754994587842' }
         ],
         legendary: [
-            { name: 'red-dragon', icon: '🐉', color: 'red' },
-            { name: 'blue-dragon', icon: '🐉', color: 'blue' },
-            { name: 'green-dragon', icon: '🐉', color: 'green' },
-            { name: 'yellow-dragon', icon: '🐉', color: 'yellow' },
-            { name: 'pink-dragon', icon: '🐉', color: 'pink' },
-            { name: 'red-rocket', icon: '🚀', color: 'red' },
-            { name: 'blue-rocket', icon: '🚀', color: 'blue' },
-            { name: 'green-rocket', icon: '🚀', color: 'green' },
-            { name: 'yellow-rocket', icon: '🚀', color: 'yellow' },
-            { name: 'pink-rocket', icon: '🚀', color: 'pink' }
+            { name: 'red-dragon', icon: '🐉', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-dragon.png?updatedAt=1754994590931' },
+            { name: 'blue-dragon', icon: '🐉', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-dragon.png?updatedAt=1754994572438' },
+            { name: 'green-dragon', icon: '🐉', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-dragon.png?updatedAt=1754994579235' },
+            { name: 'yellow-dragon', icon: '🐉', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-dragon.png?updatedAt=1754994597148' },
+            { name: 'pink-dragon', icon: '🐉', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-dragon.png?updatedAt=1754994585669' },
+            { name: 'red-rocket', icon: '🚀', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-rocket.png?updatedAt=1754994594662' },
+            { name: 'blue-rocket', icon: '🚀', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-rocket.png?updatedAt=1754994575521' },
+            { name: 'green-rocket', icon: '🚀', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-rocket.png?updatedAt=1754994583160' },
+            { name: 'yellow-rocket', icon: '🚀', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-rocket.png?updatedAt=1754994600333' },
+            { name: 'pink-rocket', icon: '🚀', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-rocket.png?updatedAt=1754994589070' }
         ],
         mythic: [
-            { name: 'red-trophy', icon: '🏆', color: 'red' },
-            { name: 'blue-trophy', icon: '🏆', color: 'blue' },
-            { name: 'green-trophy', icon: '🏆', color: 'green' },
-            { name: 'yellow-trophy', icon: '🏆', color: 'yellow' },
-            { name: 'pink-trophy', icon: '🏆', color: 'pink' },
-            { name: 'red-gem', icon: '💎', color: 'red' },
-            { name: 'blue-gem', icon: '💎', color: 'blue' },
-            { name: 'green-gem', icon: '💎', color: 'green' },
-            { name: 'yellow-gem', icon: '💎', color: 'yellow' },
-            { name: 'pink-gem', icon: '💎', color: 'pink' }
+            { name: 'red-trophy', icon: '🏆', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-trophy.png?updatedAt=1754994594689' },
+            { name: 'blue-trophy', icon: '🏆', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-trophy.png?updatedAt=1754994577125' },
+            { name: 'green-trophy', icon: '🏆', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-trophy.png?updatedAt=1754994583571' },
+            { name: 'yellow-trophy', icon: '🏆', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-trophy.png?updatedAt=1754994600737' },
+            { name: 'pink-trophy', icon: '🏆', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-trophy.png?updatedAt=1754994589286' },
+            { name: 'red-gem', icon: '💎', color: 'red', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/red-gem.png?updatedAt=1754994592033' },
+            { name: 'blue-gem', icon: '💎', color: 'blue', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/blue-gem.png?updatedAt=1754994575200' },
+            { name: 'green-gem', icon: '💎', color: 'green', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/green-gem.png?updatedAt=1754994580666' },
+            { name: 'yellow-gem', icon: '💎', color: 'yellow', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/yellow-gem.png?updatedAt=1754994598191' },
+            { name: 'pink-gem', icon: '💎', color: 'pink', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/pink-gem.png?updatedAt=1754994586790' }
         ],
         divine: [
-            { name: 'solana-throne', icon: '👑', color: 'gold' },
-            { name: 'solana-crown', icon: '👑', color: 'gold' },
-            { name: 'solana-blade', icon: '⚔️', color: 'gold' },
-            { name: 'solana-orb', icon: '🔮', color: 'gold' },
-            { name: 'solana-relic', icon: '🏛️', color: 'gold' }
+            { name: 'solana-throne', icon: '👑', color: 'gold', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/solana-throne.png?updatedAt=1754994590917' },
+            { name: 'solana-crown', icon: '👑', color: 'gold', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/solana-crown.png?updatedAt=1754994572417' },
+            { name: 'solana-blade', icon: '⚔️', color: 'gold', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/solana-blade.png?updatedAt=1754994579208' },
+            { name: 'solana-orb', icon: '🔮', color: 'gold', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/solana-orb.png?updatedAt=1754994597168' },
+            { name: 'solana-relic', icon: '🏛️', color: 'gold', image: 'https://ik.imagekit.io/8rb7srzl8/Downloads/solana-relic.png?updatedAt=1754994585656' }
         ]
     };
     
@@ -1717,6 +1755,11 @@ app.get('/test-downloads', (req, res) => {
             path: downloadsPath
         });
     }
+});
+
+// Serve favicon
+app.get('/favicon.ico', (req, res) => {
+    res.status(204).end(); // No content response
 });
 
 // Serve demo page
