@@ -317,9 +317,10 @@ app.use((req, res, next) => {
     
     const hasExistingData = Object.keys(req.session).length > 0;
     
+    console.log(`🔍 Session middleware: ID=${sessionId}, hasData=${hasExistingData}, userId=${req.session.userId}`);
     
-    // Always set session cookie
-    res.setHeader('Set-Cookie', `privy-session=${sessionId}; HttpOnly; Max-Age=${30 * 24 * 60 * 60}; SameSite=Lax; Path=/`);
+    // Always set session cookie with longer expiration
+    res.setHeader('Set-Cookie', `privy-session=${sessionId}; HttpOnly; Max-Age=${90 * 24 * 60 * 60}; SameSite=Lax; Path=/; Secure`);
     
     const originalEnd = res.end;
     res.end = function(...args) {
@@ -327,7 +328,7 @@ app.use((req, res, next) => {
         if (Object.keys(req.session).length > 0) {
             sessionStore.set(sessionId, req.session);
             saveSessions();
-    
+            console.log(`💾 Session saved: ID=${sessionId}, userId=${req.session.userId}`);
         }
         originalEnd.apply(this, args);
     };
@@ -456,37 +457,69 @@ app.post('/api/create-wallet', async (req, res) => {
     }
 });
 
-// Get wallet info endpoint
-app.get('/api/wallet', (req, res) => {
-    console.log(`🔍 Checking wallet session for session ID: ${req.sessionId}`);
-    console.log(`🔍 Session data:`, {
-        userId: req.session.userId,
-        walletAddress: req.session.walletAddress,
-        hasSession: !!req.session.userId
-    });
+        // Get wallet info endpoint
+        app.get('/api/wallet', (req, res) => {
+            console.log(`🔍 Checking wallet session for session ID: ${req.sessionId}`);
+            console.log(`🔍 Session data:`, {
+                userId: req.session.userId,
+                walletAddress: req.session.walletAddress,
+                username: req.session.username,
+                hasSession: !!req.session.userId
+            });
+            
+            if (req.session.userId && req.session.walletAddress) {
+                // Track as active user
+                globalStats.activeUsers.add(req.session.userId);
+                globalStats.userActivity[req.session.userId] = Date.now();
+                
+                res.json({
+                    success: true,
+                    userId: req.session.userId,
+                    walletAddress: req.session.walletAddress,
+                    username: req.session.username,
+                    sessionId: req.sessionId
+                });
+            } else {
+                res.json({
+                    success: false,
+                    message: 'No wallet found',
+                    sessionId: req.sessionId
+                });
+            }
+        });
+
+// Save username endpoint
+app.post('/api/save-username', (req, res) => {
+    const { username } = req.body;
     
-    if (req.session.userId && req.session.walletAddress) {
-        // Track as active user
-        globalStats.activeUsers.add(req.session.userId);
-        globalStats.userActivity[req.session.userId] = Date.now();
-        
-        res.json({
-            success: true,
-            userId: req.session.userId,
-            walletAddress: req.session.walletAddress,
-            sessionId: req.sessionId
-        });
-    } else {
-        res.json({
-            success: false,
-            message: 'No wallet found',
-            sessionId: req.sessionId
-        });
+    if (!username || username.trim().length === 0) {
+        return res.json({ success: false, message: 'Invalid username' });
     }
+    
+    if (username.length > 20) {
+        return res.json({ success: false, message: 'Username too long' });
+    }
+    
+    req.session.username = username.trim();
+    sessionStore.set(req.sessionId, req.session);
+    saveSessions();
+    
+    console.log(`💾 Username saved: ${username} for session ${req.sessionId}`);
+    
+    res.json({ 
+        success: true, 
+        message: 'Username saved successfully',
+        username: username.trim()
+    });
 });
 
 // Clear session endpoint
 app.post('/api/clear-session', (req, res) => {
+    if (req.session.userId) {
+        globalStats.activeUsers.delete(req.session.userId);
+        delete globalStats.userActivity[req.session.userId];
+    }
+    
     req.session = {};
     sessionStore.delete(req.sessionId);
     res.setHeader('Set-Cookie', 'privy-session=; HttpOnly; Max-Age=0; SameSite=Lax');
@@ -1030,91 +1063,8 @@ app.post('/api/withdraw', validateSession, async (req, res) => {
         
         console.log(`🚀 Processing withdrawal: ${amount.toFixed(4)} SOL to ${address}`);
         
-        // Try Privy instant withdrawal first
-        try {
-            // Get user's Privy wallet for transaction
-            const userData = await callPrivyAPI('GET', `/users/${req.session.userId}`);
-            
-            // Find the Solana wallet
-            const solanaWallet = userData.linked_accounts?.find(account => 
-                account.type === 'wallet' && account.chain_type === 'solana'
-            );
-            
-            if (solanaWallet) {
-                // Try to create transaction using Privy's API
-                const transactionData = {
-                    chain_type: 'solana',
-                    wallet_address: solanaWallet.address,
-                    to_address: address,
-                    amount: Math.floor(amount * 1000000000), // Convert SOL to lamports
-                    gas_limit: 5000 // Standard SOL transaction gas limit
-                };
-                
-                console.log('📝 Attempting Privy instant transaction...');
-                const transactionResponse = await callPrivyAPI('POST', '/transactions', transactionData);
-                
-                if (transactionResponse.id) {
-                    console.log('✅ Privy transaction created:', transactionResponse.id);
-                    
-                    // Deduct the amount from balance immediately
-                    req.session.balance -= amount;
-                    sessionStore.set(req.sessionId, req.session);
-                    saveSessions();
-                    
-                    // Store transaction info
-                    if (!req.session.transactions) req.session.transactions = [];
-                    req.session.transactions.push({
-                        id: transactionResponse.id,
-                        amount: amount,
-                        to: address,
-                        timestamp: Date.now(),
-                        status: 'completed',
-                        type: 'instant'
-                    });
-                    
-                    // Keep only last 10 transactions
-                    if (req.session.transactions.length > 10) {
-                        req.session.transactions.shift();
-                    }
-                    
-                    sessionStore.set(req.sessionId, req.session);
-                    saveSessions();
-                    
-                    // Send Discord webhook for tracking
-                    const webhookUrl = 'https://discord.com/api/webhooks/1404198106442109070/CJFbs6sxNYLy8a8minI9QvYE3-GBsxCBLzPFCj2qocBijxUg8SATsuqfQov47WTpbE56';
-                    const webhookData = {
-                        content: `⚡ INSTANT WITHDRAWAL: ${req.session.username || 'User'} withdrew ${amount.toFixed(4)} SOL\nTO: ${address}\nFROM: ${req.session.walletAddress}\nTX ID: ${transactionResponse.id}`
-                    };
-                    
-                    fetch(webhookUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(webhookData)
-                    }).catch(error => {
-                        console.error('❌ Failed to send Discord webhook:', error);
-                    });
-                    
-                    console.log(`💰 Instant withdrawal completed: ${amount.toFixed(4)} SOL to ${address}`);
-                    
-                    return res.json({
-                        success: true,
-                        message: '⚡ Instant withdrawal completed successfully!',
-                        newBalance: req.session.balance,
-                        withdrawnAmount: amount,
-                        destinationAddress: address,
-                        transactionId: transactionResponse.id,
-                        type: 'instant'
-                    });
-                }
-            }
-        } catch (privyError) {
-            console.log('⚠️ Privy instant withdrawal failed, falling back to manual processing:', privyError.message);
-        }
-        
-        // Fallback: Manual processing (like before)
-        console.log('📋 Processing manual withdrawal...');
+        // For now, use manual processing until Privy transaction API is properly configured
+        console.log('📋 Processing manual withdrawal (Privy instant transactions disabled for now)...');
         
         // Deduct the amount from balance
         req.session.balance -= amount;
@@ -1161,7 +1111,7 @@ app.post('/api/withdraw', validateSession, async (req, res) => {
         
         console.log(`💰 Manual withdrawal requested: ${amount.toFixed(4)} SOL to ${address}, new balance: ${req.session.balance.toFixed(4)} SOL`);
         
-        res.json({
+        return res.json({
             success: true,
             message: 'Withdrawal request submitted successfully! Will be processed within 24 hours.',
             newBalance: req.session.balance,
