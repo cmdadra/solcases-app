@@ -2841,6 +2841,12 @@
                         this.currentWallet = data.walletAddress;
                         this.isConnected = true;
                         
+                        console.log('🔍 Session data received:', {
+                            walletAddress: data.walletAddress,
+                            sessionId: data.sessionId,
+                            success: data.success
+                        });
+                        
                         // Save session ID to localStorage
                         if (data.sessionId) {
                             localStorage.setItem('privy-session-id', data.sessionId);
@@ -2852,6 +2858,11 @@
                         this.startAutomaticBalanceRefresh();
 
                         console.log('✅ Session restored successfully for wallet:', data.walletAddress);
+                        console.log('🔍 Final state:', {
+                            isConnected: this.isConnected,
+                            currentWallet: this.currentWallet,
+                            balance: this.balance
+                        });
                         
                         // Connect to chat after session is established
                         this.connectToChat();
@@ -2899,6 +2910,17 @@
                             setTimeout(() => this.checkExistingSession(), 1000); // Small delay to ensure network is ready
                         }
                     }
+                });
+            }
+
+            // Debug function - can be called from console
+            debugSession() {
+                console.log('🔍 Debug Session State:', {
+                    isConnected: this.isConnected,
+                    currentWallet: this.currentWallet,
+                    balance: this.balance,
+                    sessionId: localStorage.getItem('privy-session-id'),
+                    username: this.username
                 });
             }
 
@@ -3791,6 +3813,7 @@
                     
                     if (data.success) {
                         this.balance = data.balance;
+                        console.log('💰 Balance loaded:', this.balance);
                         this.updateWalletUI();
         
                     } else {
@@ -4825,8 +4848,19 @@
 
         // Withdraw Functions
         function requestWithdraw() {
-            if (!solCases.currentWallet || !solCases.balance) {
+            console.log('🔍 Withdrawal check:', {
+                currentWallet: solCases.currentWallet,
+                balance: solCases.balance,
+                isConnected: solCases.isConnected
+            });
+            
+            if (!solCases.isConnected || !solCases.currentWallet) {
                 alert('Please connect your wallet first');
+                return;
+            }
+            
+            if (!solCases.balance || solCases.balance <= 0) {
+                alert('No balance available for withdrawal');
                 return;
             }
 
@@ -4971,6 +5005,8 @@
         // Initialize on page load
         window.onload = () => {
             solCases = new SolCases();
+            // Make debug function available globally
+            window.debugSession = () => solCases.debugSession();
         };
 
         // Tooltip Functions
