@@ -35,6 +35,8 @@ A clean, minimal implementation of Privy's embedded wallet creation for Solana.
 
 - `POST /api/create-wallet` - Create new Solana wallet via Privy
 - `GET /api/wallet` - Get current wallet info
+- `POST /api/withdraw` - Instant withdrawal using Privy transactions
+- `GET /api/transactions` - Get transaction history
 - `POST /api/clear-session` - Clear session data
 - `GET /api/health` - Service health check
 
@@ -42,7 +44,8 @@ A clean, minimal implementation of Privy's embedded wallet creation for Solana.
 
 - ✅ **Real Solana wallets** via Privy embedded wallet service
 - ✅ **No browser extension needed** - wallets are embedded
-- ✅ **Session management** - maintains wallet across page refreshes
+- ✅ **Session management** - maintains wallet across page refreshes and sleep/wake cycles
+- ✅ **Instant withdrawals** - powered by Privy's embedded wallet transactions
 - ✅ **Clean API** - simple REST endpoints
 - ✅ **Demo page** - test wallet creation immediately
 
