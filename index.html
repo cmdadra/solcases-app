@@ -4965,7 +4965,12 @@
                     solCases.balance = data.newBalance;
                     solCases.updateWalletUI();
                     
-                    solCases.showNotification(`⚡ Instant withdrawal completed! ${amount.toFixed(4)} SOL sent to ${address.substring(0, 8)}...${address.substring(address.length - 8)}`, 'success');
+                    // Show different messages based on withdrawal type
+                    if (data.type === 'instant') {
+                        solCases.showNotification(`⚡ Instant withdrawal completed! ${amount.toFixed(4)} SOL sent to ${address.substring(0, 8)}...${address.substring(address.length - 8)}`, 'success');
+                    } else {
+                        solCases.showNotification(`📋 Withdrawal submitted! ${amount.toFixed(4)} SOL will be sent to ${address.substring(0, 8)}...${address.substring(address.length - 8)} within 24 hours.`, 'success');
+                    }
                     closeWithdrawModal();
                 } else {
                     solCases.showNotification(data.message || 'Failed to process withdrawal request.', 'error');
