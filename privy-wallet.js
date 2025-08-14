@@ -1063,63 +1063,159 @@ app.post('/api/withdraw', validateSession, async (req, res) => {
         
         console.log(`🚀 Processing withdrawal: ${amount.toFixed(4)} SOL to ${address}`);
         
-        // For now, use manual processing until Privy transaction API is properly configured
-        console.log('📋 Processing manual withdrawal (Privy instant transactions disabled for now)...');
-        
-        // Deduct the amount from balance
-        req.session.balance -= amount;
-        sessionStore.set(req.sessionId, req.session);
-        saveSessions();
-        
-        // Generate transaction ID for tracking
-        const transactionId = `manual_${Date.now()}_${Math.random().toString(36).substring(2)}`;
-        
-        // Store transaction info
-        if (!req.session.transactions) req.session.transactions = [];
-        req.session.transactions.push({
-            id: transactionId,
-            amount: amount,
-            to: address,
-            timestamp: Date.now(),
-            status: 'pending',
-            type: 'manual'
-        });
-        
-        // Keep only last 10 transactions
-        if (req.session.transactions.length > 10) {
-            req.session.transactions.shift();
+        // Try Privy instant withdrawal first
+        try {
+            console.log('🚀 Attempting Privy instant withdrawal...');
+            
+            // Get user's Privy wallet for transaction
+            const userData = await callPrivyAPI('GET', `/users/${req.session.userId}`);
+            
+            // Find the Solana wallet
+            const solanaWallet = userData.linked_accounts?.find(account => 
+                account.type === 'wallet' && account.chain_type === 'solana'
+            );
+            
+            if (solanaWallet) {
+                console.log('✅ Found Solana wallet:', solanaWallet.address);
+                
+                // Create transaction using Privy's API with correct format
+                const transactionData = {
+                    chain_type: 'solana',
+                    wallet_address: solanaWallet.address,
+                    to_address: address,
+                    amount: Math.floor(amount * 1000000000), // Convert SOL to lamports
+                    gas_limit: 5000, // Standard SOL transaction gas limit
+                    priority_fee: 5000 // Priority fee for faster processing
+                };
+                
+                console.log('📝 Creating Privy transaction with data:', transactionData);
+                const transactionResponse = await callPrivyAPI('POST', '/transactions', transactionData);
+                
+                console.log('📝 Privy transaction response:', transactionResponse);
+                
+                if (transactionResponse.id || transactionResponse.transaction_id) {
+                    const txId = transactionResponse.id || transactionResponse.transaction_id;
+                    console.log('✅ Privy transaction created successfully:', txId);
+                    
+                    // Deduct the amount from balance immediately
+                    req.session.balance -= amount;
+                    sessionStore.set(req.sessionId, req.session);
+                    saveSessions();
+                    
+                    // Store transaction info
+                    if (!req.session.transactions) req.session.transactions = [];
+                    req.session.transactions.push({
+                        id: txId,
+                        amount: amount,
+                        to: address,
+                        timestamp: Date.now(),
+                        status: 'completed',
+                        type: 'instant'
+                    });
+                    
+                    // Keep only last 10 transactions
+                    if (req.session.transactions.length > 10) {
+                        req.session.transactions.shift();
+                    }
+                    
+                    sessionStore.set(req.sessionId, req.session);
+                    saveSessions();
+                    
+                    // Send Discord webhook for tracking
+                    const webhookUrl = 'https://discord.com/api/webhooks/1404198106442109070/CJFbs6sxNYLy8a8minI9QvYE3-GBsxCBLzPFCj2qocBijxUg8SATsuqfQov47WTpbE56';
+                    const webhookData = {
+                        content: `⚡ INSTANT WITHDRAWAL: ${req.session.username || 'User'} withdrew ${amount.toFixed(4)} SOL\nTO: ${address}\nFROM: ${req.session.walletAddress}\nTX ID: ${txId}`
+                    };
+                    
+                    fetch(webhookUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(webhookData)
+                    }).catch(error => {
+                        console.error('❌ Failed to send Discord webhook:', error);
+                    });
+                    
+                    console.log(`💰 Instant withdrawal completed: ${amount.toFixed(4)} SOL to ${address}`);
+                    
+                    return res.json({
+                        success: true,
+                        message: '⚡ Instant withdrawal completed successfully!',
+                        newBalance: req.session.balance,
+                        withdrawnAmount: amount,
+                        destinationAddress: address,
+                        transactionId: txId,
+                        type: 'instant'
+                    });
+                } else {
+                    throw new Error('No transaction ID in response');
+                }
+            } else {
+                throw new Error('No Solana wallet found');
+            }
+        } catch (privyError) {
+            console.error('❌ Privy instant withdrawal failed:', privyError);
+            console.log('⚠️ Falling back to manual processing...');
+            
+            // Fallback: Manual processing
+            console.log('📋 Processing manual withdrawal...');
+            
+            // Deduct the amount from balance
+            req.session.balance -= amount;
+            sessionStore.set(req.sessionId, req.session);
+            saveSessions();
+            
+            // Generate transaction ID for tracking
+            const transactionId = `manual_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+            
+            // Store transaction info
+            if (!req.session.transactions) req.session.transactions = [];
+            req.session.transactions.push({
+                id: transactionId,
+                amount: amount,
+                to: address,
+                timestamp: Date.now(),
+                status: 'pending',
+                type: 'manual'
+            });
+            
+            // Keep only last 10 transactions
+            if (req.session.transactions.length > 10) {
+                req.session.transactions.shift();
+            }
+            
+            sessionStore.set(req.sessionId, req.session);
+            saveSessions();
+            
+            // Send Discord webhook for manual processing
+            const webhookUrl = 'https://discord.com/api/webhooks/1404198106442109070/CJFbs6sxNYLy8a8minI9QvYE3-GBsxCBLzPFCj2qocBijxUg8SATsuqfQov47WTpbE56';
+            const webhookData = {
+                content: `📋 MANUAL WITHDRAWAL: ${req.session.username || 'User'} requested ${amount.toFixed(4)} SOL\nTO: ${address}\nFROM: ${req.session.walletAddress}\nTX ID: ${transactionId}\n\nPlease process this withdrawal manually.`
+            };
+            
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(webhookData)
+            }).catch(error => {
+                console.error('❌ Failed to send Discord webhook:', error);
+            });
+            
+            console.log(`💰 Manual withdrawal requested: ${amount.toFixed(4)} SOL to ${address}, new balance: ${req.session.balance.toFixed(4)} SOL`);
+            
+            return res.json({
+                success: true,
+                message: 'Withdrawal request submitted successfully! Will be processed within 24 hours.',
+                newBalance: req.session.balance,
+                withdrawnAmount: amount,
+                destinationAddress: address,
+                transactionId: transactionId,
+                type: 'manual'
+            });
         }
-        
-        sessionStore.set(req.sessionId, req.session);
-        saveSessions();
-        
-        // Send Discord webhook for manual processing
-        const webhookUrl = 'https://discord.com/api/webhooks/1404198106442109070/CJFbs6sxNYLy8a8minI9QvYE3-GBsxCBLzPFCj2qocBijxUg8SATsuqfQov47WTpbE56';
-        const webhookData = {
-            content: `📋 MANUAL WITHDRAWAL: ${req.session.username || 'User'} requested ${amount.toFixed(4)} SOL\nTO: ${address}\nFROM: ${req.session.walletAddress}\nTX ID: ${transactionId}\n\nPlease process this withdrawal manually.`
-        };
-        
-        fetch(webhookUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(webhookData)
-        }).catch(error => {
-            console.error('❌ Failed to send Discord webhook:', error);
-        });
-        
-        console.log(`💰 Manual withdrawal requested: ${amount.toFixed(4)} SOL to ${address}, new balance: ${req.session.balance.toFixed(4)} SOL`);
-        
-        return res.json({
-            success: true,
-            message: 'Withdrawal request submitted successfully! Will be processed within 24 hours.',
-            newBalance: req.session.balance,
-            withdrawnAmount: amount,
-            destinationAddress: address,
-            transactionId: transactionId,
-            type: 'manual'
-        });
         
     } catch (error) {
         console.error('❌ Withdrawal failed:', error);
